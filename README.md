@@ -14,6 +14,8 @@ pip install -r requirements.txt
 python src/main.py configs/example1.json --title "Example Scene"
 ```
 
+The viewer uses Open3D and supports interactive orbit, pan, and zoom with the mouse.
+
 ## JSON Format
 
 ```json

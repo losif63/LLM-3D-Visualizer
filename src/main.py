@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 import numpy as np
-from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import open3d as o3d
 
 
 Color = Tuple[float, float, float]
@@ -88,7 +87,7 @@ def create_cube_vertices(length: float) -> np.ndarray:
 def cube_faces_indices() -> List[List[int]]:
     # Each face is a quad of 4 vertex indices
     return [
-        [0, 1, 2, 3],  # bottom
+        [0, 3, 2, 1],  # bottom
         [4, 5, 6, 7],  # top
         [0, 1, 5, 4],  # front
         [2, 3, 7, 6],  # back
@@ -101,67 +100,47 @@ def apply_transform(points: np.ndarray, R: np.ndarray, t: np.ndarray) -> np.ndar
     return (R @ points.T).T + t
 
 
-def add_cube(ax, obj: SceneObject, bounds_accum: List[np.ndarray]):
+def create_cube_mesh(obj: SceneObject) -> o3d.geometry.TriangleMesh:
     if obj.length is None:
         raise ValueError("Cube requires 'length'.")
-    vertices = create_cube_vertices(obj.length)
+    # Build cube as a mesh from our vertices and faces
+    vertices_local = create_cube_vertices(obj.length)
     R = resolve_rotation_matrix(obj.rotation)
     t = np.array(obj.position, dtype=float)
-    vertices_world = apply_transform(vertices, R, t)
+    vertices_world = apply_transform(vertices_local, R, t)
 
-    faces = cube_faces_indices()
-    face_polys = [[vertices_world[idx] for idx in face] for face in faces]
+    # Triangulate each quad face into two triangles
+    quads = cube_faces_indices()
+    triangles = []
+    for a, b, c, d in quads:
+        triangles.append([a, b, c])
+        triangles.append([a, c, d])
 
-    poly = Poly3DCollection(face_polys, alpha=0.9)
-    poly.set_facecolor(obj.color)
-    poly.set_edgecolor((0.1, 0.1, 0.1))
-    ax.add_collection3d(poly)
+    mesh = o3d.geometry.TriangleMesh(
+        vertices=o3d.utility.Vector3dVector(vertices_world.astype(float)),
+        triangles=o3d.utility.Vector3iVector(np.array(triangles, dtype=np.int32)),
+    )
+    mesh.compute_vertex_normals()
+    mesh.paint_uniform_color(np.array(obj.color, dtype=float))
+    return mesh
 
-    bounds_accum.append(vertices_world)
 
-
-def add_sphere(ax, obj: SceneObject, bounds_accum: List[np.ndarray]):
+def create_sphere_mesh(obj: SceneObject) -> o3d.geometry.TriangleMesh:
     if obj.radius is None:
         raise ValueError("Sphere requires 'radius'.")
-    # Parametric sphere at origin
-    u = np.linspace(0.0, 2.0 * math.pi, 48)
-    v = np.linspace(0.0, math.pi, 24)
-    uu, vv = np.meshgrid(u, v)
-    x = obj.radius * np.cos(uu) * np.sin(vv)
-    y = obj.radius * np.sin(uu) * np.sin(vv)
-    z = obj.radius * np.cos(vv)
-    pts = np.stack([x, y, z], axis=-1).reshape(-1, 3)
-
+    # Use Open3D's sphere primitive, then apply our transform
+    mesh = o3d.geometry.TriangleMesh.create_sphere(radius=float(obj.radius), resolution=40)
+    mesh.compute_vertex_normals()
+    mesh.paint_uniform_color(np.array(obj.color, dtype=float))
     R = resolve_rotation_matrix(obj.rotation)
-    t = np.array(obj.position, dtype=float)
-    pts_world = apply_transform(pts, R, t)
-    xw = pts_world[:, 0].reshape(x.shape)
-    yw = pts_world[:, 1].reshape(y.shape)
-    zw = pts_world[:, 2].reshape(z.shape)
-
-    ax.plot_surface(xw, yw, zw, color=obj.color, rstride=1, cstride=1, linewidth=0, antialiased=True, shade=True)
-
-    bounds_accum.append(pts_world)
+    mesh.rotate(R, center=(0.0, 0.0, 0.0))
+    mesh.translate(np.array(obj.position, dtype=float))
+    return mesh
 
 
-def set_axes_equal(ax):
-    # Equal aspect ratio for 3D
-    x_limits = ax.get_xlim3d()
-    y_limits = ax.get_ylim3d()
-    z_limits = ax.get_zlim3d()
-
-    x_range = abs(x_limits[1] - x_limits[0])
-    x_middle = np.mean(x_limits)
-    y_range = abs(y_limits[1] - y_limits[0])
-    y_middle = np.mean(y_limits)
-    z_range = abs(z_limits[1] - z_limits[0])
-    z_middle = np.mean(z_limits)
-
-    plot_radius = 0.5 * max([x_range, y_range, z_range])
-
-    ax.set_xlim3d([x_middle - plot_radius, x_middle + plot_radius])
-    ax.set_ylim3d([y_middle - plot_radius, y_middle + plot_radius])
-    ax.set_zlim3d([z_middle - plot_radius, z_middle + plot_radius])
+def set_axes_equal(*args, **kwargs):
+    # No-op placeholder retained for API compatibility
+    return None
 
 
 def compute_scene_bounds(bounds_accum: List[np.ndarray]) -> Tuple[np.ndarray, np.ndarray]:
@@ -195,34 +174,28 @@ def load_scene_objects(json_path: str) -> List[SceneObject]:
 
 
 def render_scene(objects: List[SceneObject], title: str = "3D Scene") -> None:
-    fig = plt.figure(figsize=(8, 6))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_title(title)
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-
+    geometries: List[o3d.geometry.Geometry] = []
     bounds_accum: List[np.ndarray] = []
 
     for obj in objects:
         if obj.type == "cube":
-            add_cube(ax, obj, bounds_accum)
+            mesh = create_cube_mesh(obj)
+            geometries.append(mesh)
+            # accumulate bounds
+            bounds_accum.append(np.asarray(mesh.vertices))
         elif obj.type == "sphere":
-            add_sphere(ax, obj, bounds_accum)
+            mesh = create_sphere_mesh(obj)
+            geometries.append(mesh)
+            bounds_accum.append(np.asarray(mesh.vertices))
         else:
             raise ValueError(f"Unsupported object type: {obj.type}")
 
-    mins, maxs = compute_scene_bounds(bounds_accum)
-    center = 0.5 * (mins + maxs)
-    extent = max(1.0, float(np.max(maxs - mins)))
-    pad = 0.2 * extent
-    ax.set_xlim(center[0] - extent - pad, center[0] + extent + pad)
-    ax.set_ylim(center[1] - extent - pad, center[1] + extent + pad)
-    ax.set_zlim(center[2] - extent - pad, center[2] + extent + pad)
-    set_axes_equal(ax)
+    # Optional: center camera roughly to the scene by using bounds
+    if bounds_accum:
+        mins, maxs = compute_scene_bounds(bounds_accum)
+        _ = (mins, maxs)  # kept in case of future camera setup
 
-    plt.tight_layout()
-    plt.show()
+    o3d.visualization.draw_geometries(geometries, window_name=title)
 
 
 def parse_args() -> argparse.Namespace:
