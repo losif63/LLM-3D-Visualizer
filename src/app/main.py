@@ -49,13 +49,14 @@ def generate_scene_with_openai(prompt: str, model: str, temperature: float, titl
         You are a tool that MUST output ONLY valid JSON. 
         NO comments. NO explanations. NO trailing text. NO deviations.
 
-        Create a 3D scene according to the prompt, using the cube and sphere primitives.
+        Create a 3D scene according to the prompt, using cube, cuboid, and sphere primitives.
         Return the information of the primitives in the scene as a JSON object.
         The output MUST be a JSON object of the exact form:
 
         {
         "scene": [
             { "type": "cube", "length": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0] },
+            { "type": "cuboid", "x_length": 1.0, "y_length": 0.5, "z_length": 2.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0] },
             { "type": "sphere", "radius": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0] }
         ]
         }
@@ -63,6 +64,7 @@ def generate_scene_with_openai(prompt: str, model: str, temperature: float, titl
         This is an EXAMPLE. Replace values to create the scene.
         The scene should be created in a way that is visually appealing and realistic.
         The scene should be created in a way that is easy to understand and visualize.
+        You may use as many primitives as you like. Focus on making the scene complete and realistic.
 
         IMPORTANT RULES:
         - Output ONLY valid JSON. 

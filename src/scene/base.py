@@ -40,7 +40,7 @@ def load_scene_objects(json_path: str) -> List[SceneObject]:
 
 def objects_from_scene_dict(scene_dict: dict) -> List[SceneObject]:
     # Import here to avoid circular import (primitives import SceneObject from base)
-    from src.scene.primitives import parse_cube_object, parse_sphere_object
+    from src.scene.primitives import parse_cube_object, parse_sphere_object, parse_cuboid_object
     
     scene_list = scene_dict.get("scene", [])
     objects: List[SceneObject] = []
@@ -50,6 +50,8 @@ def objects_from_scene_dict(scene_dict: dict) -> List[SceneObject]:
                 objects.append(parse_cube_object(item))
             case "sphere":
                 objects.append(parse_sphere_object(item))
+            case "cuboid":
+                objects.append(parse_cuboid_object(item))
             case _:
                 raise ValueError(f"Primitive {str(item.get("type", "")).lower()} does not match any of the provided options.")
     return objects
