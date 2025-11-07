@@ -46,5 +46,9 @@ def resolve_rotation_matrix(rotation: Optional[List[float]]) -> np.ndarray:
     return np.eye(3)
 
 
+def scale_matrix(x, y, z) -> np.ndarray:
+    return np.diag([x, y, z])
+
+
 def apply_transform(points: np.ndarray, R: np.ndarray, t: np.ndarray) -> np.ndarray:
     return (R @ points.T).T + t

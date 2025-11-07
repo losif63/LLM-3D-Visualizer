@@ -1,6 +1,7 @@
 from src.scene.primitives.cube import CubeObject, parse_cube_object
 from src.scene.primitives.sphere import SphereObject, parse_sphere_object
 from src.scene.primitives.cuboid import CuboidObject, parse_cuboid_object
+from src.scene.primitives.ellipsoid import EllipsoidObject, parse_ellipsoid_object
 
 __all__ = [
     "CubeObject",
@@ -8,6 +9,8 @@ __all__ = [
     "SphereObject",
     "parse_sphere_object",
     "CuboidObject",
-    "parse_cuboid_object"
+    "parse_cuboid_object",
+    "EllipsoidObject",
+    "parse_ellipsoid_object",
 ]
 
