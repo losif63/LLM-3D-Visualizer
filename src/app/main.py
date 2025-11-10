@@ -120,7 +120,7 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--config", type=str, help="Path to scene JSON file")
     group.add_argument("--prompt", type=str, help="LLM prompt to generate a scene")
     parser.add_argument("--title", type=str, default="3D Scene", help="Window title")
-    parser.add_argument("--model", type=str, default="gpt-4o-mini", help="OpenAI model for generation")
+    parser.add_argument("--model", type=str, default="gpt-4.1", help="OpenAI model for generation")
     parser.add_argument("--temperature", type=float, default=0.2, help="Sampling temperature for LLM")
     return parser.parse_args()
 

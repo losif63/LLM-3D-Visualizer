@@ -12,7 +12,9 @@ class EllipsoidObject(SceneObject):
     rz: float
 
     def get_mesh(self):
-        assert self.radii is not None, "Ellipsoid requires 'radii'."
+        assert self.rx is not None, "Ellipsoid requires 'rx'."
+        assert self.ry is not None, "Ellipsoid requires 'ry'."
+        assert self.rz is not None, "Ellipsoid requires 'rz'."
         # Create a unit sphere, then scale it non-uniformly to create an ellipsoid
         mesh = o3d.geometry.TriangleMesh.create_sphere(radius=1.0, resolution=40)
         mesh.compute_vertex_normals()
