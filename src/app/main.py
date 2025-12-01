@@ -49,7 +49,7 @@ def generate_scene_with_openai(prompt: str, model: str, temperature: float, titl
         You are a tool that MUST output ONLY valid JSON. 
         NO comments. NO explanations. NO trailing text. NO deviations.
 
-        Create a 3D scene according to the prompt, using cube, cuboid, sphere, ellipsoid, or pyramid primitives.
+        Create a 3D scene according to the prompt, using cube, cuboid, sphere, ellipsoid, pyramid, or cylinder primitives.
         Return the information of the primitives in the scene as a JSON object.
         The output MUST be a JSON object of the exact form:
 
@@ -59,7 +59,8 @@ def generate_scene_with_openai(prompt: str, model: str, temperature: float, titl
             { "type": "cuboid", "x_length": 1.0, "y_length": 0.5, "z_length": 2.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0] },
             { "type": "sphere", "radius": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0] },
             { "type": "ellipsoid", "rx": 1.0, "ry": 1.0, "rz": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0] },
-            { "type": "pyramid", "base_length": 1.0, "height": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0] }
+            { "type": "pyramid", "base_length": 1.0, "height": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0] },
+            { "type": "cylinder", "radius": 1.0, "height": 1.0, "color": [0.0, 0.0, 0.0], "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0] }
         ]
         }
 
